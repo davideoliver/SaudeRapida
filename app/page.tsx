@@ -6,11 +6,6 @@ import { buscarUnidades } from "@/lib/api-client";
 import type { RespostaUnidades } from "@/types/unidade";
 import UnidadeCard, { type UnidadeCardData } from "@/components/UnidadeCard";
 
-// dentro de Home(), junto dos outros useState:
-const [unidadeRelato, setUnidadeRelato] = useState<UnidadeCardData | null>(
-  null,
-);
-
 // Leaflet usa "window": só pode rodar no navegador.
 const MapView = dynamic(() => import("@/components/MapView"), {
   ssr: false,
@@ -19,6 +14,10 @@ const MapView = dynamic(() => import("@/components/MapView"), {
 
 export default function Home() {
   const { pos, estado } = useGeolocation();
+  // Mantém a unidade selecionada para o relato dentro do componente React.
+  const [unidadeRelato, setUnidadeRelato] = useState<UnidadeCardData | null>(
+    null,
+  );
   const [dados, setDados] = useState<RespostaUnidades | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [selecionada, setSelecionada] = useState<string | null>(null);
