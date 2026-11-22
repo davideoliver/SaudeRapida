@@ -3,8 +3,10 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { buscarUnidades } from "@/lib/api-client";
-import type { RespostaUnidades } from "@/types/unidade";
-import UnidadeCard, { type UnidadeCardData } from "@/components/UnidadeCard";
+import RelatoForm from "@/components/RelatoForm"; // Importa o formulário para registrar o tempo de espera.
+import type { RespostaUnidades, Unidade } from "@/types/unidade"; // Importa os tipos usados pelo estado e pela resposta da API.
+import UnidadeCard from "@/components/UnidadeCard"; // Importa o cartão que exibe cada unidade de saúde.
+
 
 // Leaflet usa "window": só pode rodar no navegador.
 const MapView = dynamic(() => import("@/components/MapView"), {
@@ -15,9 +17,7 @@ const MapView = dynamic(() => import("@/components/MapView"), {
 export default function Home() {
   const { pos, estado } = useGeolocation();
   // Mantém a unidade selecionada para o relato dentro do componente React.
-  const [unidadeRelato, setUnidadeRelato] = useState<UnidadeCardData | null>(
-    null,
-  );
+  const [relatando, setRelatando] = useState<Unidade | null>(null); // Guarda a unidade completa necessária pelo formulário.
   const [dados, setDados] = useState<RespostaUnidades | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [selecionada, setSelecionada] = useState<string | null>(null);
@@ -61,6 +61,13 @@ export default function Home() {
         </div>
 
         <section>
+          {relatando && ( // Exibe o formulário somente quando uma unidade foi escolhida.
+            <RelatoForm // Renderiza o formulário de relato acima dos estados da lista.
+              unidade={relatando} // Informa ao formulário qual unidade receberá o relato.
+              onFechar={() => setRelatando(null)} // Fecha o formulário e limpa a unidade selecionada.
+              onEnviado={() => setTentativa((t) => t + 1)} // Refaz a busca para atualizar a mediana exibida.
+            />
+          )}
           {erro && (
             <div className="rounded bg-red-100 p-3 text-red-900">
               {erro}{" "}
@@ -81,24 +88,16 @@ export default function Home() {
           )}
           <ul className="space-y-3">
             {dados?.unidades.map((u) => (
-              <li key={u.id}>
-                <UnidadeCard
+              <UnidadeCard // Renderiza o cartão como o item direto da lista.
+                key={u.id} // Mantém uma chave estável para cada unidade renderizada.
                   unidade={u}
                   selecionada={selecionada === u.id}
                   onSelecionar={(un) => setSelecionada(un.id)}
-                  onInformarEspera={(un) => setUnidadeRelato(un)}
+                  onInformarEspera={() => setRelatando(u)} // Abre o formulário usando a unidade completa da resposta.
                 />
-              </li>
             ))}
           </ul>
 
-          {/* Provisório: troque pelo <RelatoForm /> na Fase C */}
-          {unidadeRelato && (
-            <p className="mt-4 rounded bg-blue-50 p-3 text-sm">
-              Formulário de relato para <strong>{unidadeRelato.nome}</strong>{" "}
-              (em construção).
-            </p>
-          )}
         </section>
       </div>
     </main>

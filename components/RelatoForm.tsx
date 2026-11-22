@@ -57,7 +57,7 @@ export default function RelatoForm({ unidade, onFechar, onEnviado }: Props) {
   }
 
   return (
-    <div className="mb-4 rounded-xl border p-4 shadow-sm">
+    <div className="mb-4 rounded-xl border bg-white p-4 text-gray-900 shadow-sm">
       <h2 className="font-semibold">Informar minha espera</h2>
       <p className="text-sm text-gray-600">{unidade.nome}</p>
 
@@ -83,7 +83,7 @@ export default function RelatoForm({ unidade, onFechar, onEnviado }: Props) {
             inputMode="numeric"
             value={texto}
             onChange={(ev) => setTexto(ev.target.value)}
-            className="min-h-11 w-full rounded border p-2"
+            className="min-h-11 w-full rounded border bg-white p-2 text-gray-900"
             placeholder="Ex.: 40"
             autoFocus
           />
@@ -106,10 +106,10 @@ export default function RelatoForm({ unidade, onFechar, onEnviado }: Props) {
             <button
               type="button"
               onClick={onFechar}
-              className="min-h-11 rounded border px-4"
+              className="min-h-11 rounded border bg-white px-4 text-gray-900"
             >
               Cancelar
-              </button>
+            </button>
           </div>
         </form>
       )}
