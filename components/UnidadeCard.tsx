@@ -39,10 +39,10 @@ export default function UnidadeCard({
     <li>
     {/* Cada cartão é um item válido da lista de unidades. */}
 		<article
-      className={`rounded-xl border bg-white p-4 shadow-sm transition-colors ${
+      className={`rounded-2xl border bg-white/90 p-4 shadow-lg shadow-slate-900/5 backdrop-blur-md transition-colors ${
         selecionada
-          ? "border-blue-600 ring-2 ring-blue-100"
-          : "border-slate-200"
+          ? "border-red-500 ring-2 ring-red-100"
+          : "border-white/80"
       }`}
     >
       <button
