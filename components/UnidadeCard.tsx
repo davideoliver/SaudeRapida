@@ -36,7 +36,9 @@ export default function UnidadeCard({
   };
 
   return (
-    <article
+    <li>
+    {/* Cada cartão é um item válido da lista de unidades. */}
+		<article
       className={`rounded-xl border bg-white p-4 shadow-sm transition-colors ${
         selecionada
           ? "border-blue-600 ring-2 ring-blue-100"
@@ -91,5 +93,6 @@ export default function UnidadeCard({
         Informar minha espera
       </button>
     </article>
+    </li>
   );
 }
