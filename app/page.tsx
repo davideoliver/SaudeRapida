@@ -104,7 +104,7 @@ export default function Home() {
         />
       </div>
 
-      <header className="absolute inset-x-0 top-0 z-10 pl-16 pr-4 pt-4 sm:pl-20 sm:pr-6 sm:pt-6">
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-10 pl-16 pr-4 pt-4 sm:pl-20 sm:pr-6 sm:pt-6">
         <div className="flex w-fit items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/85 px-4 py-3 text-white shadow-lg shadow-slate-950/20 backdrop-blur-xl">
           <div
             aria-hidden="true"
