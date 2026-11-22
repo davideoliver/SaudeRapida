@@ -3,6 +3,7 @@ import { calcularEspera, type RelatoParaCalculo } from "@/lib/estimativa";
 import { estimarViagem, parseCoordenada } from "@/lib/geo";
 import { supabase } from "@/lib/supabase";
 import { LIMITES } from "@/types/unidade";
+import { buscarRotas } from "@/lib/tomtom";
 import type { ErroApi, RespostaUnidades, Unidade } from "@/types/unidade";
 
 type UnidadeDb = {
@@ -63,6 +64,7 @@ export async function GET(req: Request) {
 
     const unidadesDb = (resUnidades.data ?? []) as UnidadeDb[];
     const relatosDb = (resRelatos.data ?? []) as RelatoDb[];
+    const rotas = await buscarRotas(origem, unidadesDb.map((u) => ({ id: u.id, lat: u.lat, lng: u.lng }))); // Busca as rotas de trânsito uma única vez para todas as unidades ativas.
 
     // 3) Agrupar os relatos por unidade
     const relatosPorUnidade = new Map<string, RelatoParaCalculo[]>();
@@ -75,8 +77,11 @@ export async function GET(req: Request) {
     // 4) Montar cada unidade no formato do contrato
     const unidades: Unidade[] = unidadesDb.map((u) => {
       const espera = calcularEspera(relatosPorUnidade.get(u.id) ?? [], agora);
-      // v0: viagem ESTIMADA. No commit seguinte, tomtom.ts passa a preencher "transito" e este vira o fallback.
-      const viagem = estimarViagem(origem, { lat: u.lat, lng: u.lng });
+      const rota = rotas.get(u.id); // Recupera a rota de trânsito calculada para a unidade atual.
+      const viagemFallback = estimarViagem(origem, { lat: u.lat, lng: u.lng }); // Calcula a estimativa local quando a rota de trânsito não estiver disponível.
+      const viagem_min = rota ? rota.viagem_min : viagemFallback.viagem_min; // Usa o tempo de trânsito ou mantém o valor estimado como fallback.
+      const distancia_km = rota ? rota.distancia_km : viagemFallback.distancia_km; // Usa a distância da rota ou mantém a distância estimada como fallback.
+      const fonte_viagem = rota ? "transito" : "estimado"; // Identifica se o valor veio do trânsito ou da estimativa local.
 
       // O contrato diz "tempo em minutos inteiros": a mediana (ex.: 37.5) é arredondada só aqui.
       const esperaInteira =
@@ -91,10 +96,10 @@ export async function GET(req: Request) {
         espera_min: esperaInteira,
         n_relatos: espera.n_relatos,
         ultimo_relato_em: espera.ultimo_relato_em,
-        viagem_min: viagem.viagem_min,
-        distancia_km: viagem.distancia_km,
-        total_min: viagem.viagem_min + (esperaInteira ?? 0),
-        fonte_viagem: "estimado",
+        viagem_min, // Informa o tempo de viagem selecionado para a unidade.
+        distancia_km, // Informa a distância selecionada para a unidade.
+        total_min: viagem_min + (esperaInteira ?? 0), // Soma o tempo de espera ao tempo de viagem.
+        fonte_viagem, // Informa a origem do cálculo da viagem.
       };
     });
 
