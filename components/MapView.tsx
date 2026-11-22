@@ -57,7 +57,11 @@ type Props = {
   onSelecionar: (id: string) => void;
 };
 
-export default function MapView({ origem, unidades, onSelecionar }: Props) {
+export default function MapView({
+  origem,
+  unidades,
+  onSelecionar,
+}: Props) {
   return (
     <MapContainer
       center={[origem.lat, origem.lng]}

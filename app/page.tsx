@@ -10,7 +10,7 @@ import UnidadeCard from "@/components/UnidadeCard";
 
 const MapView = dynamic(() => import("@/components/MapView"), {
   ssr: false,
-  loading: () => <div className="h-full w-full bg-slate-200" />,
+  loading: () => <div className="h-full w-full bg-slate-950" />,
 });
 
 function LoadingScreen() {
@@ -41,11 +41,7 @@ function LoadingScreen() {
       </p>
       <div className="loading-track mt-8" aria-hidden="true">
         <div className="loading-progress" />
-        <svg
-          className="loading-ambulance"
-          viewBox="0 0 64 36"
-          fill="none"
-        >
+        <svg className="loading-ambulance" viewBox="0 0 64 36" fill="none">
           <path
             d="M4 8a3 3 0 0 1 3-3h30a3 3 0 0 1 3 3v21H4V8Z"
             fill="#f8fafc"
@@ -71,6 +67,12 @@ export default function Home() {
   const [erro, setErro] = useState<string | null>(null);
   const [selecionada, setSelecionada] = useState<string | null>(null);
   const [tentativa, setTentativa] = useState(0);
+  const [tempoMinimoConcluido, setTempoMinimoConcluido] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setTempoMinimoConcluido(true), 2200);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (estado === "carregando") return;
@@ -90,7 +92,7 @@ export default function Home() {
     };
   }, [pos, estado, tentativa]);
 
-  const carregando = !dados && !erro;
+  const carregando = (!dados && !erro) || !tempoMinimoConcluido;
 
   return (
     <main className="relative isolate h-dvh min-h-[560px] overflow-hidden bg-slate-200">
@@ -102,11 +104,11 @@ export default function Home() {
         />
       </div>
 
-      <header className="absolute inset-x-0 top-0 z-10 px-4 pt-4 sm:px-6 sm:pt-6">
-        <div className="flex w-fit items-center gap-3 rounded-2xl border border-white/70 bg-white/85 px-4 py-3 shadow-lg shadow-slate-900/10 backdrop-blur-xl">
+      <header className="absolute inset-x-0 top-0 z-10 pl-16 pr-4 pt-4 sm:pl-20 sm:pr-6 sm:pt-6">
+        <div className="flex w-fit items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/85 px-4 py-3 text-white shadow-lg shadow-slate-950/20 backdrop-blur-xl">
           <div
             aria-hidden="true"
-            className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600 text-white shadow-md shadow-red-900/20"
+            className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-red-600 shadow-md shadow-slate-950/20"
           >
             <svg viewBox="0 0 32 32" className="h-7 w-7" fill="none">
               <path
@@ -116,10 +118,10 @@ export default function Home() {
             </svg>
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+            <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
               Saúde <span className="text-red-600">Rápida</span>
             </h1>
-            <p className="text-xs font-medium tracking-wide text-slate-500">
+            <p className="text-xs font-medium tracking-wide text-slate-300">
               Cuidado perto de você
             </p>
           </div>
@@ -131,12 +133,12 @@ export default function Home() {
         className="absolute inset-x-3 bottom-3 top-32 z-10 flex flex-col gap-3 sm:inset-x-auto sm:right-6 sm:top-28 sm:bottom-6 sm:w-[28rem] sm:max-w-[calc(100vw_-_3rem)]"
       >
         {(estado === "negado" || estado === "indisponivel") && (
-          <p className="shrink-0 rounded-2xl border border-amber-200/80 bg-amber-50/90 p-3 text-sm text-amber-900 shadow-lg backdrop-blur-xl">
+          <p className="shrink-0 rounded-2xl border border-amber-200/20 bg-slate-950/85 p-3 text-sm text-amber-200 shadow-lg backdrop-blur-xl">
             Não conseguimos sua localização. Mostrando o centro da cidade.
           </p>
         )}
 
-        <div className="min-h-0 flex-1 overflow-y-auto rounded-3xl border border-white/70 bg-slate-50/75 p-3 shadow-2xl shadow-slate-900/15 backdrop-blur-xl sm:p-4">
+        <div className="hospital-list-scroll min-h-0 flex-1 overflow-y-auto rounded-3xl border border-white/10 bg-slate-950/75 p-3 shadow-2xl shadow-slate-950/25 backdrop-blur-xl sm:p-4">
           {relatando && (
             <div className="mb-4">
               <RelatoForm
@@ -149,11 +151,11 @@ export default function Home() {
           {erro && (
             <div
               role="alert"
-              className="mb-4 rounded-2xl border border-red-200 bg-red-50/95 p-4 text-red-900"
+              className="mb-4 rounded-2xl border border-red-300/20 bg-red-950/70 p-4 text-red-100"
             >
               <p>{erro}</p>
               <button
-                className="mt-2 font-semibold underline underline-offset-2"
+                className="mt-2 font-semibold text-red-200 underline underline-offset-2"
                 onClick={() => {
                   setErro(null);
                   setTentativa((t) => t + 1);
@@ -164,7 +166,7 @@ export default function Home() {
             </div>
           )}
           {dados && dados.unidades.length === 0 && (
-            <p className="rounded-2xl bg-white/80 p-4 text-slate-700">
+            <p className="rounded-2xl border border-white/10 bg-slate-900/80 p-4 text-slate-200">
               Nenhuma unidade encontrada.
             </p>
           )}

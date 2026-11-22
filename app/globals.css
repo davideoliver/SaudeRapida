@@ -25,8 +25,47 @@ body {
 .leaflet-container {
   height: 100%;
   width: 100%;
-  background: #dbeafe;
+  background: #0f172a;
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.leaflet-control-zoom a {
+  border-color: rgb(255 255 255 / 12%) !important;
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+.leaflet-control-attribution {
+  background: rgb(15 23 42 / 80%) !important;
+  color: #cbd5e1 !important;
+}
+
+.leaflet-control-attribution a {
+  color: #93c5fd !important;
+}
+
+.hospital-list-scroll {
+  scrollbar-color: #475569 rgb(15 23 42 / 45%);
+  scrollbar-width: thin;
+}
+
+.hospital-list-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.hospital-list-scroll::-webkit-scrollbar-track {
+  border-radius: 9999px;
+  background: rgb(15 23 42 / 45%);
+}
+
+.hospital-list-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid #0f172a;
+  border-radius: 9999px;
+  background: #475569;
+}
+
+.hospital-list-scroll::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 .loading-screen {
@@ -49,11 +88,11 @@ body {
   position: absolute;
   inset: 0 auto 0 0;
   width: 100%;
-  transform: scaleX(0.35);
+  transform: scaleX(0);
   transform-origin: left;
   border-radius: inherit;
   background: linear-gradient(90deg, #991b1b, #ef4444);
-  animation: loading-progress 2.4s ease-in-out infinite;
+  animation: loading-progress 2.2s linear infinite;
 }
 
 .loading-ambulance {
@@ -63,38 +102,43 @@ body {
   top: 50%;
   width: 2.5rem;
   height: auto;
-  transform: translate(-10%, -72%);
+  transform: translateY(-72%);
   filter: drop-shadow(0 3px 4px rgb(0 0 0 / 30%));
-  animation: loading-ambulance 2.4s ease-in-out infinite;
+  animation: loading-ambulance 2.2s linear infinite;
 }
 
 @keyframes loading-progress {
   0% {
-    transform: scaleX(0.08);
-  }
-  65% {
-    transform: scaleX(0.78);
+    transform: scaleX(0);
   }
   100% {
-    transform: scaleX(0.96);
+    transform: scaleX(1);
   }
 }
 
 @keyframes loading-ambulance {
   0% {
     left: 0;
+    opacity: 1;
   }
-  65% {
-    left: 68%;
+  78% {
+    left: calc(100% - 2.5rem);
+    opacity: 1;
+  }
+  84% {
+    left: calc(100% - 2.5rem);
+    opacity: 1;
+  }
+  88% {
+    left: calc(100% - 2.5rem);
+    opacity: 0;
+  }
+  89% {
+    left: 0;
+    opacity: 0;
   }
   100% {
-    left: calc(100% - 2.5rem);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .loading-progress,
-  .loading-ambulance {
-    animation: none;
+    left: 0;
+    opacity: 1;
   }
 }
