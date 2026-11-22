@@ -88,14 +88,13 @@ export default function Home() {
           )}
           <ul className="space-y-3">
             {dados?.unidades.map((u) => (
-              <li key={u.id}>
-                <UnidadeCard
+              <UnidadeCard // Renderiza o cartão como o item direto da lista.
+                key={u.id} // Mantém uma chave estável para cada unidade renderizada.
                   unidade={u}
                   selecionada={selecionada === u.id}
                   onSelecionar={(un) => setSelecionada(un.id)}
                   onInformarEspera={() => setRelatando(u)} // Abre o formulário usando a unidade completa da resposta.
                 />
-              </li>
             ))}
           </ul>
 
