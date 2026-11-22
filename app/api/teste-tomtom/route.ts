@@ -14,7 +14,24 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, erro: "Use ?from=lat,lng&to=lat,lng" }, { status: 400 });
   }
 
-  const url = new URL(`https://api.tomtom.com/routing/1/calculateRoute/${from}:${to}/json`);
+  const normalizeCoordinate = (value: string) => {
+    const match = /^(-?\d{1,2}(?:\.\d+)?),(-?\d{1,3}(?:\.\d+)?)$/.exec(value);
+    if (!match) return null;
+
+    const latitude = Number(match[1]);
+    const longitude = Number(match[2]);
+    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
+
+    return `${latitude.toFixed(6)},${longitude.toFixed(6)}`;
+  };
+
+  const normalizedFrom = normalizeCoordinate(from);
+  const normalizedTo = normalizeCoordinate(to);
+  if (!normalizedFrom || !normalizedTo) {
+    return NextResponse.json({ ok: false, erro: "Invalid coordinates" }, { status: 400 });
+  }
+
+  const url = new URL(`https://api.tomtom.com/routing/1/calculateRoute/${normalizedFrom}:${normalizedTo}/json`);
   url.searchParams.set("key", key);
   url.searchParams.set("traffic", "true");
   url.searchParams.set("travelMode", "car");
