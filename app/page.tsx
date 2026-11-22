@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type TouchEvent } from "react";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { buscarUnidades } from "@/lib/api-client";
 import RelatoForm from "@/components/RelatoForm";
@@ -66,8 +66,13 @@ export default function Home() {
   const [dados, setDados] = useState<RespostaUnidades | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [selecionada, setSelecionada] = useState<string | null>(null);
+  const [indiceUnidade, setIndiceUnidade] = useState(0);
   const [tentativa, setTentativa] = useState(0);
   const [tempoMinimoConcluido, setTempoMinimoConcluido] = useState(false);
+  const unidades = dados?.unidades ?? [];
+  const indiceAtual =
+    unidades.length > 0 ? indiceUnidade % unidades.length : 0;
+  const toqueInicial = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setTempoMinimoConcluido(true), 2200);
@@ -92,6 +97,39 @@ export default function Home() {
     };
   }, [pos, estado, tentativa]);
 
+  const navegarCarrossel = (direcao: -1 | 1) => {
+    if (unidades.length < 2) return;
+    setIndiceUnidade(
+      (indice) => (indice + direcao + unidades.length) % unidades.length,
+    );
+  };
+
+  const iniciarArraste = (event: TouchEvent<HTMLDivElement>) => {
+    const toque = event.touches.item(0);
+    if (toque) toqueInicial.current = { x: toque.clientX, y: toque.clientY };
+  };
+
+  const finalizarArraste = (event: TouchEvent<HTMLDivElement>) => {
+    const inicio = toqueInicial.current;
+    const toque = event.changedTouches.item(0);
+    toqueInicial.current = null;
+    if (!inicio || !toque) return;
+
+    const deslocamentoX = toque.clientX - inicio.x;
+    const deslocamentoY = toque.clientY - inicio.y;
+    if (Math.abs(deslocamentoX) < 40 || Math.abs(deslocamentoX) <= Math.abs(deslocamentoY)) {
+      return;
+    }
+
+    navegarCarrossel(deslocamentoX < 0 ? 1 : -1);
+  };
+
+  const selecionarNoMapa = (id: string) => {
+    setSelecionada(id);
+    const indice = unidades.findIndex((unidade) => unidade.id === id);
+    if (indice >= 0) setIndiceUnidade(indice);
+  };
+
   const carregando = (!dados && !erro) || !tempoMinimoConcluido;
 
   return (
@@ -99,8 +137,8 @@ export default function Home() {
       <div className="absolute inset-0 z-0">
         <MapView
           origem={dados?.origem ?? pos}
-          unidades={dados?.unidades ?? []}
-          onSelecionar={setSelecionada}
+          unidades={unidades}
+          onSelecionar={selecionarNoMapa}
         />
       </div>
 
@@ -130,7 +168,7 @@ export default function Home() {
 
       <section
         aria-label="Unidades de saúde próximas"
-        className="absolute inset-x-3 bottom-3 top-32 z-10 flex flex-col gap-3 sm:inset-x-auto sm:right-6 sm:top-28 sm:bottom-6 sm:w-[28rem] sm:max-w-[calc(100vw_-_3rem)]"
+        className="absolute inset-x-3 top-auto bottom-3 z-10 flex h-[280px] min-h-[250px] max-h-[45vh] flex-col gap-3 sm:inset-x-auto sm:right-6 sm:top-28 sm:bottom-6 sm:h-auto sm:min-h-0 sm:max-h-none sm:w-[28rem] sm:max-w-[calc(100vw_-_3rem)]"
       >
         {(estado === "negado" || estado === "indisponivel") && (
           <p className="shrink-0 rounded-2xl border border-amber-200/20 bg-slate-950/85 p-3 text-sm text-amber-200 shadow-lg backdrop-blur-xl">
@@ -170,8 +208,89 @@ export default function Home() {
               Nenhuma unidade encontrada.
             </p>
           )}
-          <ul className="space-y-3">
-            {dados?.unidades.map((u) => (
+          {unidades.length > 0 && (
+            <div className="sm:hidden">
+              <div className="mb-2 flex items-center justify-between px-1">
+                <span
+                  aria-live="polite"
+                  aria-atomic="true"
+                  className="text-xs font-medium text-slate-300"
+                >
+                  {indiceAtual + 1} de {unidades.length}
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    aria-label="Unidade anterior"
+                    disabled={unidades.length < 2}
+                    onClick={() => navegarCarrossel(-1)}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-slate-100 transition hover:bg-white/10 disabled:opacity-40"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 20 20"
+                      className="h-4 w-4"
+                      fill="none"
+                    >
+                      <path
+                        d="m12 4-6 6 6 6"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.8"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Próxima unidade"
+                    disabled={unidades.length < 2}
+                    onClick={() => navegarCarrossel(1)}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-slate-100 transition hover:bg-white/10 disabled:opacity-40"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 20 20"
+                      className="h-4 w-4"
+                      fill="none"
+                    >
+                      <path
+                        d="m8 4 6 6-6 6"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.8"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div
+                role="group"
+                aria-label="Carrossel de unidades de saúde"
+                onTouchStart={iniciarArraste}
+                onTouchEnd={finalizarArraste}
+                onTouchCancel={() => {
+                  toqueInicial.current = null;
+                }}
+                className="touch-pan-y"
+              >
+                <ul className="space-y-3">
+                  <UnidadeCard
+                    key={unidades[indiceAtual].id}
+                    unidade={unidades[indiceAtual]}
+                    selecionada={selecionada === unidades[indiceAtual].id}
+                    onSelecionar={(unidade) => setSelecionada(unidade.id)}
+                    onInformarEspera={() =>
+                      setRelatando(unidades[indiceAtual])
+                    }
+                  />
+                </ul>
+              </div>
+            </div>
+          )}
+          <ul className="hidden space-y-3 sm:block">
+            {unidades.map((u) => (
               <UnidadeCard
                 key={u.id}
                 unidade={u}
