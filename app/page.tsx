@@ -79,6 +79,13 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  const selecionarUnidade = (id: string) => {
+    setSelecionada((atual) => ({
+      id,
+      solicitacao: (atual?.solicitacao ?? 0) + 1,
+    }));
+  };
+
   useEffect(() => {
     if (estado === "carregando") return;
     let cancelado = false;

@@ -54,12 +54,31 @@ function AjustarTamanho() {
 type Props = {
   origem: Coordenada;
   unidades: Unidade[];
+  selecionada: { id: string; solicitacao: number } | null;
   onSelecionar: (id: string) => void;
 };
+
+function FocarUnidade({
+  unidades,
+  selecionada,
+}: Pick<Props, "unidades" | "selecionada">) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!selecionada) return;
+    const unidade = unidades.find(({ id }) => id === selecionada.id);
+    if (!unidade) return;
+
+    map.setView([unidade.lat, unidade.lng], 16);
+  }, [map, selecionada, unidades]);
+
+  return null;
+}
 
 export default function MapView({
   origem,
   unidades,
+  selecionada,
   onSelecionar,
 }: Props) {
   return (
@@ -77,6 +96,7 @@ export default function MapView({
       />
       <AjustarTamanho />
       <Recentralizar centro={origem} />
+      <FocarUnidade unidades={unidades} selecionada={selecionada} />
       <CircleMarker center={[origem.lat, origem.lng]} radius={8} />
       {unidades.map((u) => (
         <Marker
