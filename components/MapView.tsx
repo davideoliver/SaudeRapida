@@ -30,6 +30,27 @@ function Recentralizar({ centro }: { centro: Coordenada }) {
   return null;
 }
 
+function AjustarTamanho() {
+  const map = useMap();
+
+  useEffect(() => {
+    const container = map.getContainer();
+    const ajustar = () => map.invalidateSize({ pan: false });
+    const observer = new ResizeObserver(ajustar);
+    observer.observe(container);
+    window.addEventListener("resize", ajustar);
+    const frame = window.requestAnimationFrame(ajustar);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", ajustar);
+      window.cancelAnimationFrame(frame);
+    };
+  }, [map]);
+
+  return null;
+}
+
 type Props = {
   origem: Coordenada;
   unidades: Unidade[];
@@ -69,7 +90,11 @@ export default function MapView({
       <TileLayer
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="&copy; OpenStreetMap contributors"
+        keepBuffer={4}
+        updateWhenIdle={false}
+        updateWhenZooming={false}
       />
+      <AjustarTamanho />
       <Recentralizar centro={origem} />
       <FocarUnidade unidades={unidades} selecionada={selecionada} />
       <CircleMarker center={[origem.lat, origem.lng]} radius={8} />
