@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #e2e8f0;
+  --foreground: #0f172a;
 }
 
 @theme inline {
@@ -12,15 +12,133 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  background: #0f172a;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.leaflet-control-zoom a {
+  border-color: rgb(255 255 255 / 12%) !important;
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+.leaflet-control-attribution {
+  background: rgb(15 23 42 / 80%) !important;
+  color: #cbd5e1 !important;
+}
+
+.leaflet-control-attribution a {
+  color: #93c5fd !important;
+}
+
+.hospital-list-scroll {
+  scrollbar-color: #475569 rgb(15 23 42 / 45%);
+  scrollbar-width: thin;
+}
+
+.hospital-list-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.hospital-list-scroll::-webkit-scrollbar-track {
+  border-radius: 9999px;
+  background: rgb(15 23 42 / 45%);
+}
+
+.hospital-list-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid #0f172a;
+  border-radius: 9999px;
+  background: #475569;
+}
+
+.hospital-list-scroll::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+.loading-screen {
+  background:
+    radial-gradient(ellipse at 50% 42%, rgb(127 29 29 / 18%), transparent 48%),
+    rgb(9 15 27 / 96%);
+  backdrop-filter: blur(8px);
+}
+
+.loading-track {
+  position: relative;
+  width: min(20rem, 76vw);
+  height: 0.6rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 9%);
+}
+
+.loading-progress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #991b1b, #ef4444);
+  animation: loading-progress 2.2s linear infinite;
+}
+
+.loading-ambulance {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  top: 50%;
+  width: 2.5rem;
+  height: auto;
+  transform: translateY(-72%);
+  filter: drop-shadow(0 3px 4px rgb(0 0 0 / 30%));
+  animation: loading-ambulance 2.2s linear infinite;
+}
+
+@keyframes loading-progress {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes loading-ambulance {
+  0% {
+    left: 0;
+    opacity: 1;
+  }
+  78% {
+    left: calc(100% - 2.5rem);
+    opacity: 1;
+  }
+  84% {
+    left: calc(100% - 2.5rem);
+    opacity: 1;
+  }
+  88% {
+    left: calc(100% - 2.5rem);
+    opacity: 0;
+  }
+  89% {
+    left: 0;
+    opacity: 0;
+  }
+  100% {
+    left: 0;
+    opacity: 1;
+  }
 }
