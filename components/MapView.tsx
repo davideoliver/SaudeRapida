@@ -58,6 +58,37 @@ type Props = {
   onSelecionar: (id: string) => void;
 };
 
+function AtualizarCamera({
+  origem,
+  unidades,
+  selecionada,
+}: Pick<Props, "origem" | "unidades" | "selecionada">) {
+  const map = useMap();
+  const unidadeSelecionadaId = selecionada?.id;
+  const solicitacao = selecionada?.solicitacao;
+
+  useEffect(() => {
+    const unidade = unidadeSelecionadaId
+      ? unidades.find(({ id }) => id === unidadeSelecionadaId)
+      : undefined;
+
+    if (unidade) {
+      map.flyTo([unidade.lat, unidade.lng], 16, { duration: 1.5 });
+    } else {
+      map.setView([origem.lat, origem.lng]);
+    }
+  }, [
+    map,
+    origem.lat,
+    origem.lng,
+    unidadeSelecionadaId,
+    solicitacao,
+    unidades,
+  ]);
+
+  return null;
+}
+
 export default function MapView({
   origem,
   unidades,
