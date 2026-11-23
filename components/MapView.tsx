@@ -44,7 +44,7 @@ function AtualizarCamera({
       : undefined;
 
     if (unidade) {
-      map.setView([unidade.lat, unidade.lng], 16);
+      map.flyTo([unidade.lat, unidade.lng], 16, { duration: 1.5 });
     } else {
       map.setView([origem.lat, origem.lng]);
     }
