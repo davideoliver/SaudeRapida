@@ -5,13 +5,37 @@ export type Destino = { id: string; lat: number; lng: number };
 
 const BASE = "https://api.tomtom.com/routing/1/calculateRoute";
 const TIMEOUT_MS = 4000;
-const TAMANHO_LOTE = 4;
-const PAUSA_APOS_FALHA_MS = 10 * 60_000;
+
+// Proteção da cota gratuita da TomTom
+const MAX_COM_TRANSITO = 8;        // só as N unidades mais próximas ganham rota com trânsito
+const TAMANHO_LOTE = 2;            // chamadas simultâneas
+const PAUSA_ENTRE_LOTES_MS = 500;  // mantém abaixo do limite de requisições por segundo
+const PAUSA_429_MS = 30_000;       // excesso de velocidade: pausa curta
+const PAUSA_403_MS = 10 * 60_000;  // chave inválida ou cota do dia esgotada: pausa longa
 const MAX_ENTRADAS_CACHE = 500;
 
 // Estado em memória (vale por instância do servidor; ver "Limitações" no relatório).
 const cache = new Map<string, { rota: Rota; em: number }>();
 let pausadoAte = 0;
+
+function pausar(ms: number) {
+  pausadoAte = Math.max(pausadoAte, Date.now() + ms);
+}
+
+function dormir(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+// Distância em linha reta (haversine), só para escolher as unidades mais próximas.
+function distanciaRetaKm(a: Coordenada, b: { lat: number; lng: number }): number {
+  const rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad;
+  const dLng = (b.lng - a.lng) * rad;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
 
 function grade(n: number): string {
   const g = LIMITES.GRADE_ORIGEM_GRAUS;
@@ -41,11 +65,14 @@ async function chamarTomTom(
   try {
     const res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
 
-    if (res.status === 403 || res.status === 429) {
-      pausadoAte = Date.now() + PAUSA_APOS_FALHA_MS; // disjuntor
-      console.warn(
-        `TomTom respondeu ${res.status}: pausando chamadas por 10 min`,
-      );
+    if (res.status === 429) {
+      pausar(PAUSA_429_MS);
+      console.warn("TomTom 429 (muitas requisições): pausa curta de 30 s");
+      return null;
+    }
+    if (res.status === 403) {
+      pausar(PAUSA_403_MS);
+      console.warn("TomTom 403 (chave inválida ou cota esgotada): pausa de 10 min");
       return null;
     }
     if (!res.ok) return null;
@@ -72,7 +99,8 @@ async function chamarTomTom(
 
 /**
  * Devolve um Map id → Rota SÓ para os destinos que conseguiu calcular.
- * Quem chama usa o fallback para os que ficarem de fora.
+ * Calcula no máximo MAX_COM_TRANSITO rotas (as unidades mais próximas em linha reta).
+ * Quem chama usa o fallback para todas as que ficarem de fora.
  */
 export async function buscarRotas(
   origem: Coordenada,
@@ -82,9 +110,13 @@ export async function buscarRotas(
   const chave = process.env.TOMTOM_API_KEY;
   if (!chave) return resultado;
 
+  const maisProximos = [...destinos]
+    .sort((a, b) => distanciaRetaKm(origem, a) - distanciaRetaKm(origem, b))
+    .slice(0, MAX_COM_TRANSITO);
+
   const validadeMs = LIMITES.CACHE_ROTA_MIN * 60_000;
   const pendentes: Destino[] = [];
-  for (const d of destinos) {
+  for (const d of maisProximos) {
     const hit = cache.get(chaveCache(origem, d.id));
     if (hit && Date.now() - hit.em < validadeMs) resultado.set(d.id, hit.rota);
     else pendentes.push(d);
@@ -92,6 +124,8 @@ export async function buscarRotas(
 
   for (let i = 0; i < pendentes.length; i += TAMANHO_LOTE) {
     if (Date.now() < pausadoAte) break;
+    if (i > 0) await dormir(PAUSA_ENTRE_LOTES_MS);
+
     const lote = pendentes.slice(i, i + TAMANHO_LOTE);
     const respostas = await Promise.all(
       lote.map((d) => chamarTomTom(origem, d, chave)),
