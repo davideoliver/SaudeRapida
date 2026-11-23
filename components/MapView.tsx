@@ -58,33 +58,19 @@ type Props = {
   onSelecionar: (id: string) => void;
 };
 
-function AtualizarCamera({
-  origem,
+function FocarUnidade({
   unidades,
   selecionada,
-}: Pick<Props, "origem" | "unidades" | "selecionada">) {
+}: Pick<Props, "unidades" | "selecionada">) {
   const map = useMap();
-  const unidadeSelecionadaId = selecionada?.id;
-  const solicitacao = selecionada?.solicitacao;
 
   useEffect(() => {
-    const unidade = unidadeSelecionadaId
-      ? unidades.find(({ id }) => id === unidadeSelecionadaId)
-      : undefined;
+    if (!selecionada) return;
+    const unidade = unidades.find(({ id }) => id === selecionada.id);
+    if (!unidade) return;
 
-    if (unidade) {
-      map.flyTo([unidade.lat, unidade.lng], 16, { duration: 1.5 });
-    } else {
-      map.setView([origem.lat, origem.lng]);
-    }
-  }, [
-    map,
-    origem.lat,
-    origem.lng,
-    unidadeSelecionadaId,
-    solicitacao,
-    unidades,
-  ]);
+    map.setView([unidade.lat, unidade.lng], 16);
+  }, [map, selecionada, unidades]);
 
   return null;
 }
@@ -92,6 +78,7 @@ function AtualizarCamera({
 export default function MapView({
   origem,
   unidades,
+  selecionada,
   onSelecionar,
 }: Props) {
   return (
@@ -109,6 +96,7 @@ export default function MapView({
       />
       <AjustarTamanho />
       <Recentralizar centro={origem} />
+      <FocarUnidade unidades={unidades} selecionada={selecionada} />
       <CircleMarker center={[origem.lat, origem.lng]} radius={8} />
       {unidades.map((u) => (
         <Marker
