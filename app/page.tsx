@@ -20,8 +20,18 @@ export default function Home() {
   const [relatando, setRelatando] = useState<Unidade | null>(null); // Guarda a unidade completa necessária pelo formulário.
   const [dados, setDados] = useState<RespostaUnidades | null>(null);
   const [erro, setErro] = useState<string | null>(null);
-  const [selecionada, setSelecionada] = useState<string | null>(null);
+  const [selecionada, setSelecionada] = useState<{
+    id: string;
+    solicitacao: number;
+  } | null>(null);
   const [tentativa, setTentativa] = useState(0);
+
+  const selecionarUnidade = (id: string) => {
+    setSelecionada((atual) => ({
+      id,
+      solicitacao: (atual?.solicitacao ?? 0) + 1,
+    }));
+  };
 
   useEffect(() => {
     if (estado === "carregando") return;
@@ -56,7 +66,8 @@ export default function Home() {
           <MapView
             origem={dados?.origem ?? pos}
             unidades={dados?.unidades ?? []}
-            onSelecionar={setSelecionada}
+            selecionada={selecionada}
+            onSelecionar={selecionarUnidade}
           />
         </div>
 
@@ -91,8 +102,8 @@ export default function Home() {
               <UnidadeCard // Renderiza o cartão como o item direto da lista.
                 key={u.id} // Mantém uma chave estável para cada unidade renderizada.
                   unidade={u}
-                  selecionada={selecionada === u.id}
-                  onSelecionar={(un) => setSelecionada(un.id)}
+                  selecionada={selecionada?.id === u.id}
+                  onSelecionar={(un) => selecionarUnidade(un.id)}
                   onInformarEspera={() => setRelatando(u)} // Abre o formulário usando a unidade completa da resposta.
                 />
             ))}

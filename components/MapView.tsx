@@ -33,10 +33,33 @@ function Recentralizar({ centro }: { centro: Coordenada }) {
 type Props = {
   origem: Coordenada;
   unidades: Unidade[];
+  selecionada: { id: string; solicitacao: number } | null;
   onSelecionar: (id: string) => void;
 };
 
-export default function MapView({ origem, unidades, onSelecionar }: Props) {
+function FocarUnidade({
+  unidades,
+  selecionada,
+}: Pick<Props, "unidades" | "selecionada">) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!selecionada) return;
+    const unidade = unidades.find(({ id }) => id === selecionada.id);
+    if (!unidade) return;
+
+    map.setView([unidade.lat, unidade.lng], 16);
+  }, [map, selecionada, unidades]);
+
+  return null;
+}
+
+export default function MapView({
+  origem,
+  unidades,
+  selecionada,
+  onSelecionar,
+}: Props) {
   return (
     <MapContainer
       center={[origem.lat, origem.lng]}
@@ -48,6 +71,7 @@ export default function MapView({ origem, unidades, onSelecionar }: Props) {
         attribution="&copy; OpenStreetMap contributors"
       />
       <Recentralizar centro={origem} />
+      <FocarUnidade unidades={unidades} selecionada={selecionada} />
       <CircleMarker center={[origem.lat, origem.lng]} radius={8} />
       {unidades.map((u) => (
         <Marker
