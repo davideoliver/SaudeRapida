@@ -30,36 +30,34 @@ function Recentralizar({ centro }: { centro: Coordenada }) {
   return null;
 }
 
-function AjustarTamanho() {
+type Props = {
+  origem: Coordenada;
+  unidades: Unidade[];
+  selecionada: { id: string; solicitacao: number } | null;
+  onSelecionar: (id: string) => void;
+};
+
+function FocarUnidade({
+  unidades,
+  selecionada,
+}: Pick<Props, "unidades" | "selecionada">) {
   const map = useMap();
 
   useEffect(() => {
-    const container = map.getContainer();
-    const ajustar = () => map.invalidateSize({ pan: false });
-    const observer = new ResizeObserver(ajustar);
-    observer.observe(container);
-    window.addEventListener("resize", ajustar);
-    const frame = window.requestAnimationFrame(ajustar);
+    if (!selecionada) return;
+    const unidade = unidades.find(({ id }) => id === selecionada.id);
+    if (!unidade) return;
 
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", ajustar);
-      window.cancelAnimationFrame(frame);
-    };
-  }, [map]);
+    map.setView([unidade.lat, unidade.lng], 16);
+  }, [map, selecionada, unidades]);
 
   return null;
 }
 
-type Props = {
-  origem: Coordenada;
-  unidades: Unidade[];
-  onSelecionar: (id: string) => void;
-};
-
 export default function MapView({
   origem,
   unidades,
+  selecionada,
   onSelecionar,
 }: Props) {
   return (
@@ -71,12 +69,9 @@ export default function MapView({
       <TileLayer
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="&copy; OpenStreetMap contributors"
-        keepBuffer={4}
-        updateWhenIdle={false}
-        updateWhenZooming={false}
       />
-      <AjustarTamanho />
       <Recentralizar centro={origem} />
+      <FocarUnidade unidades={unidades} selecionada={selecionada} />
       <CircleMarker center={[origem.lat, origem.lng]} radius={8} />
       {unidades.map((u) => (
         <Marker
