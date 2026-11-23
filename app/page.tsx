@@ -65,7 +65,7 @@ export default function Home() {
   const [relatando, setRelatando] = useState<Unidade | null>(null);
   const [dados, setDados] = useState<RespostaUnidades | null>(null);
   const [erro, setErro] = useState<string | null>(null);
-  const [selecionada, setSelecionada] = useState<string | null>(null);
+  const [selecionada, setSelecionada] = useState<{ id: string; solicitacao: number } | null>(null); // Mantém a unidade selecionada e força o refoco quando necessário.
   const [indiceUnidade, setIndiceUnidade] = useState(0);
   const [tentativa, setTentativa] = useState(0);
   const [tempoMinimoConcluido, setTempoMinimoConcluido] = useState(false);
@@ -80,7 +80,7 @@ export default function Home() {
   }, []);
 
   const selecionarUnidade = (id: string) => {
-    setSelecionada((atual) => ({
+    setSelecionada((atual) => ({ // Atualiza a seleção preservando a contagem de solicitações de foco.
       id,
       solicitacao: (atual?.solicitacao ?? 0) + 1,
     }));
@@ -132,7 +132,7 @@ export default function Home() {
   };
 
   const selecionarNoMapa = (id: string) => {
-    setSelecionada(id);
+    selecionarUnidade(id); // Reutiliza a mesma seleção dos cards para refocar o mapa.
     const indice = unidades.findIndex((unidade) => unidade.id === id);
     if (indice >= 0) setIndiceUnidade(indice);
   };
@@ -145,6 +145,7 @@ export default function Home() {
         <MapView
           origem={dados?.origem ?? pos}
           unidades={unidades}
+          selecionada={selecionada} // Informa ao mapa qual unidade deve receber foco.
           onSelecionar={selecionarNoMapa}
         />
       </div>
@@ -286,8 +287,8 @@ export default function Home() {
                   <UnidadeCard
                     key={unidades[indiceAtual].id}
                     unidade={unidades[indiceAtual]}
-                    selecionada={selecionada === unidades[indiceAtual].id}
-                    onSelecionar={(unidade) => setSelecionada(unidade.id)}
+                    selecionada={selecionada?.id === unidades[indiceAtual].id} // Compara o identificador da seleção atual com o card exibido.
+                    onSelecionar={(unidade) => selecionarUnidade(unidade.id)} // Atualiza a seleção e o foco do mapa.
                     onInformarEspera={() =>
                       setRelatando(unidades[indiceAtual])
                     }
@@ -301,8 +302,8 @@ export default function Home() {
               <UnidadeCard
                 key={u.id}
                 unidade={u}
-                selecionada={selecionada === u.id}
-                onSelecionar={(un) => setSelecionada(un.id)}
+                selecionada={selecionada?.id === u.id} // Compara o identificador da seleção atual com cada unidade.
+                onSelecionar={(un) => selecionarUnidade(un.id)} // Atualiza a seleção e o foco do mapa.
                 onInformarEspera={() => setRelatando(u)}
               />
             ))}
