@@ -54,6 +54,7 @@ function AjustarTamanho() {
 type Props = {
   origem: Coordenada;
   unidades: Unidade[];
+  selecionada: { id: string; solicitacao: number } | null;
   onSelecionar: (id: string) => void;
 };
 
